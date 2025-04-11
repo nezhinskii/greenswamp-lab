@@ -1,0 +1,132 @@
+﻿@model greenswamp.Areas.Blog.ViewModels.FeedViewModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post - Greenswamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        swamp: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-swamp-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 lg:divide-x sm:divide-y lg:h-[calc(100vh-4rem)]">
+            <!-- Left Sidebar -->
+            <div class="lg:col-span-1 bg-white">
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <img src="/images/green-toad-logo.svg" alt="Greenswamp Logo" class="h-8 w-8">
+                        <span class="text-2xl font-bold text-swamp-600">Greenswamp</span>
+                    </div>
+                    <div class="space-x-2">
+                        <a href="register.html">
+                            <button class="bg-swamp-500 font-semibold text-white px-4 py-2 rounded-full hover:bg-swamp-600">
+                                Register
+                            </button>
+                        </a>
+                        <a href="register.html">
+                            <button class="bg-slate-200 font-semibold text-slate-900 px-4 py-2 rounded-full hover:bg-slate-300">
+                                Login
+                            </button>
+                        </a>
+                    </div>
+                    <a href="@Url.Action("Index", "Feed")" class="p-1 text-swamp-900 flex items-center space-x-2 hover:bg-swamp-50 rounded-lg">
+                        <svg class="w-8 h-8" fill="currentColor" stroke="currentColor" viewBox="-81.92 -81.92 675.84 675.84" stroke-width="0.0">
+                            <!-- SVG для Swamp -->
+                        </svg>
+                        <h3 class="text-lg font-semibold">Swamp</h3>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Feed -->
+            <div class="lg:col-span-2 divide-y bg-white">
+                @await Html.PartialAsync("_PostList", Model.Posts, new ViewDataDictionary(ViewData) { { "IsFullView", true } })
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="lg:col-span-1 bg-white invisible lg:visible">
+                <div class="p-6 pb-0">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-swamp-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <input type="text" placeholder="Search" class="w-full pl-10 pr-4 py-2 bg-swamp-100 dark:bg-swamp-900 rounded-full border-none focus:ring-2 focus:ring-swamp-400 focus-visible:ring-swamp-400 placeholder:text-swamp-400">
+                    </div>
+                </div>
+                @await Html.PartialAsync("_TrendingPonds", Model.TrendingPonds)
+                @await Html.PartialAsync("_UpcomingEvents", Model.UpcomingEvents)
+                <div class="p-6">
+                    <div class="flex items-start space-x-2 text-swamp-600">
+                        <a href="/contact" class="hover:text-swamp-800">Contact</a>
+                        <span>•</span>
+                        <a href="/privacy" class="hover:text-swamp-800">Privacy</a>
+                        <span>•</span>
+                        <a href="/tos" class="hover:text-swamp-800">Terms</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Modal (Hidden by default) -->
+    <div id="postModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">New Ribbit</h3>
+                <button onclick="closePostModal()" class="text-swamp-500 hover:text-swamp-700">
+                    ✕
+                </button>
+            </div>
+            <textarea id="postContent" class="w-full p-4 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400 focus:border-transparent" 
+                      rows="4" 
+                      placeholder="What's hopping?"></textarea>
+            <div class="mt-4 flex justify-between items-center">
+                <div class="space-x-2">
+                    <button class="p-2 hover:bg-swamp-100 rounded-lg">
+                        🐸 Add Frogmoji
+                    </button>
+                </div>
+                <button id="sendRibbitBtn" class="bg-swamp-500 text-white px-6 py-2 rounded-full hover:bg-swamp-600">
+                    Send Ribbit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPostModal() {
+            document.getElementById('postModal').classList.remove('hidden');
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.add('hidden');
+            document.getElementById('postContent').value = '';
+        }
+    </script>
+</body>
+</html>

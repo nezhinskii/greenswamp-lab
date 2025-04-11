@@ -1,0 +1,20 @@
+﻿@model List<greenswamp.Areas.Blog.Models.Event>
+
+<div class="p-6 pb-0">
+    <h3 class="text-lg font-semibold text-swamp-900 mb-4">Upcoming Fireflies</h3>
+    <div class="space-y-4">
+        @foreach (var evt in Model)
+        {
+            <div class="flex items-start space-x-3">
+                <div class="w-12 flex-shrink-0 text-center">
+                    <div class="text-sm font-semibold text-swamp-600">@evt.EventTime.ToString("MMM").ToUpper()</div>
+                    <div class="text-2xl font-bold text-swamp-900">@evt.EventTime.Day</div>
+                </div>
+                <div>
+                    <h4 class="font-medium text-swamp-900">@evt.HostOrg</h4>
+                    <p class="text-sm text-swamp-500">@evt.EventTime.ToString("h:mm tt") - @evt.Location</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>

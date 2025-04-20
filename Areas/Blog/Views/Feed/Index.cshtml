@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greenswamp Feed</title>
-   <script src="https://cdn.tailwindcss.com"></script>
+    <title>@(Model.Tag != null ? $"Posts tagged with #{Model.Tag}" : "Greenswamp Feed")</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -37,26 +37,8 @@
         <!--<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">-->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 lg:divide-x sm:divide-y lg:h-[calc(100vb-4rem)]">
             <!-- Left Sidebar -->
-            <div class="lg:col-span-1 bg-white order-1">          
-                <div class="p-6 space-y-4"> 
-                    <div class="flex items-center space-x-2">
-                        <img src="/images/green-toad-logo.svg" alt="Greenswamp Logo" class="h-8 w-8">
-                        <span class="text-2xl font-bold text-swamp-600">Greenswamp</span>
-                    </div>
-                   <div class="space-x-2"> 
-                    <a href="register.html">
-                        <button class="bg-swamp-500 font-semibold text-white px-4 py-2 rounded-full hover:bg-swamp-600">
-                            Register
-                        </button>
-                    </a>
-                    <a href="register.html">
-                        <button class="bg-slate-200 font-semibold text-slate-900 px-4 py-2 rounded-full hover:bg-slate-300">
-                            Login
-                        </button>
-                    </a>
-                    </div>
-                </div>		
-                <!-- Quick Links -->
+            <div class="lg:col-span-1 bg-white order-1">         
+                @await Html.PartialAsync("_LeftSidebar", Model.CurrentUser)
             </div>
 
             <!-- Main Feed -->
@@ -68,7 +50,7 @@
             </div>
 
             <!-- Right Sidebar -->
-            <div class="lg:col-span-1 bg-white sm:order-2 order-4">
+            <div class="lg:col-span-1 bg-white sm:order-2 order-4 lg:order-4">
                 <!-- Search-->
                 <div class="p-6 pb-0">
                     <div class="relative">
@@ -106,6 +88,8 @@
         </div>
     </div>
 
+    @await Html.PartialAsync("_PostModal")
+
     <script>
         let page = 1;
         let isLoading = false;
@@ -122,7 +106,8 @@
                 loading.classList.remove('hidden');
 
                 page++;
-                fetch(`/Blog/Feed/LoadMorePosts?page=${page}`)
+                const tag = '@Model.Tag';
+                fetch(`/Blog/Feed/LoadMorePosts?page=${page}&tag=${encodeURIComponent(tag)}`)
                     .then(response => response.text())
                     .then(html => {
                         postList.insertAdjacentHTML('beforeend', html);
@@ -137,6 +122,26 @@
         };
 
         window.addEventListener('scroll', onScroll);
+
+        window.onPostCreated = async function (postData) {
+            const postList = document.getElementById('post-list');
+            if (!postList) return;
+
+            try {
+                const response = await fetch(`/Blog/Posts/GetPostHtml/${postData.postId}`);
+                if (!response.ok) {
+                    console.error('Failed to fetch post HTML');
+                    return;
+                }
+
+                const html = await response.text();
+                if (html.trim()) {
+                    postList.insertAdjacentHTML('afterbegin', html);
+                }
+            } catch (error) {
+                console.error('Error fetching post HTML:', error);
+            }
+        };
     </script>
 </body>
 </html>

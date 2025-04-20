@@ -1,0 +1,215 @@
+﻿<!-- Post Modal (Hidden by default) -->
+<div id="postModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">New Ribbit</h3>
+            <button onclick="closePostModal()" class="text-swamp-500 hover:text-swamp-700">
+                ✕
+            </button>
+        </div>
+        <div class="mb-4">
+            <label class="inline-flex items-center">
+                <input type="radio" name="postType" value="post" class="form-radio text-swamp-500" checked>
+                <span class="ml-2 text-swamp-700">Post</span>
+            </label>
+            <label class="inline-flex items-center ml-6">
+                <input type="radio" name="postType" value="event" class="form-radio text-swamp-500">
+                <span class="ml-2 text-swamp-700">Event</span>
+            </label>
+        </div>
+        <div id="postFields">
+            <textarea id="postContent" class="w-full p-4 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400 focus:border-transparent" 
+                rows="4" 
+                placeholder="What's hopping?"></textarea>
+            <div class="mt-2">
+                <input id="mediaInput" type="file" accept="image/jpeg,image/png,image/gif,video/mp4,video/webm" class="hidden" />
+                <button id="chooseMediaBtn" class="p-2 hover:bg-swamp-100 rounded-lg">
+                    🤖 Attach Media
+                </button>
+                <span id="mediaFileName" class="ml-2 text-sm text-swamp-600"></span>
+            </div>
+        </div>
+        <div id="eventFields" class="hidden">
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-swamp-700">Event title</label>
+                    <input type="text" id="eventTitle" 
+                           class="mt-1 w-full p-2 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400" 
+                           placeholder="What kind of event?">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-swamp-700">Event Date and Time</label>
+                    <input type="datetime-local" id="eventTime" 
+                           class="mt-1 w-full p-2 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400" 
+                           required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-swamp-700">Location</label>
+                    <input type="text" id="eventLocation" 
+                           class="mt-1 w-full p-2 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400" 
+                           placeholder="Where is it happening?" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-swamp-700">Host Organization (optional)</label>
+                    <input type="text" id="eventHostOrg" 
+                           class="mt-1 w-full p-2 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400" 
+                           placeholder="Who's hosting?">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-swamp-700">Max Capacity (optional)</label>
+                    <input type="number" id="eventMaxCapacity" 
+                           class="mt-1 w-full p-2 border border-swamp-200 rounded-lg focus:ring-2 focus:ring-swamp-400" 
+                           placeholder="Max attendees" min="1">
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-between items-center">
+            <div class="space-x-2">
+                <button id="addFrogmojiBtn" class="p-2 hover:bg-swamp-100 rounded-lg">
+                    🐸 Add Frogmoji
+                </button>
+            </div>
+            <button id="sendRibbitBtn" class="bg-swamp-500 text-white px-6 py-2 rounded-full hover:bg-swamp-600">
+                Send Ribbit
+            </button>
+        </div>
+        <div id="postError" class="hidden mt-2 text-red-500 text-sm"></div>
+    </div>
+</div>
+
+<style>
+.form-radio {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #4A7043;
+    border-radius: 50%;
+    background-color: #fff;
+    cursor: pointer;
+    position: relative;
+}
+
+.form-radio:checked {
+    background-color: #4A7043;
+    border-color: #4A7043;
+}
+
+</style>
+
+<script>
+    function openPostModal() {
+        document.getElementById('postModal').classList.remove('hidden');
+    }
+
+    function closePostModal() {
+        document.getElementById('postModal').classList.add('hidden');
+        document.getElementById('postContent').value = '';
+        document.getElementById('mediaInput').value = '';
+        document.getElementById('mediaFileName').textContent = '';
+        document.getElementById('eventTime').value = '';
+        document.getElementById('eventLocation').value = '';
+        document.getElementById('eventHostOrg').value = '';
+        document.getElementById('eventMaxCapacity').value = '';
+        document.getElementById('postError').classList.add('hidden');
+        document.querySelector('input[name="postType"][value="post"]').checked = true;
+        toggleFormFields();
+    }
+
+    function toggleFormFields() {
+        const isEvent = document.querySelector('input[name="postType"]:checked').value === 'event';
+        document.getElementById('postFields').classList.toggle('hidden', isEvent);
+        document.getElementById('addFrogmojiBtn').classList.toggle('hidden', isEvent);
+        document.getElementById('eventFields').classList.toggle('hidden', !isEvent);
+    }
+
+    document.querySelectorAll('input[name="postType"]').forEach(radio => {
+        radio.addEventListener('change', toggleFormFields);
+    });
+
+    document.getElementById('chooseMediaBtn').addEventListener('click', function () {
+        document.getElementById('mediaInput').click();
+    });
+
+    document.getElementById('mediaInput').addEventListener('change', function () {
+        const fileName = this.files[0]?.name || '';
+        document.getElementById('mediaFileName').textContent = fileName;
+    });
+
+    document.getElementById('addFrogmojiBtn').addEventListener('click', function () {
+        const textarea = document.getElementById('postContent');
+        const cursorPos = textarea.selectionStart;
+        const textBefore = textarea.value.substring(0, cursorPos);
+        const textAfter = textarea.value.substring(cursorPos);
+        textarea.value = textBefore + '🐸' + textAfter;
+        textarea.selectionStart = textarea.selectionEnd = cursorPos + 2;
+        textarea.focus();
+    });
+
+    document.getElementById('sendRibbitBtn').addEventListener('click', async function () {
+        const isEvent = document.querySelector('input[name="postType"]:checked').value === 'event';
+        const content = document.getElementById('postContent').value.trim();
+        const mediaInput = document.getElementById('mediaInput');
+        const errorDiv = document.getElementById('postError');
+        const formData = new FormData();
+
+        if (isEvent) {
+            const eventTitle = document.getElementById('eventTitle').value;
+            const eventTime = document.getElementById('eventTime').value;
+            const eventLocation = document.getElementById('eventLocation').value;
+            const eventHostOrg = document.getElementById('eventHostOrg').value;
+            const eventMaxCapacity = document.getElementById('eventMaxCapacity').value;
+
+
+            if (!eventTime || !eventLocation || !eventTitle) {
+                errorDiv.textContent = 'Event title, date and location are required';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+
+            formData.append('IsEvent', 'true');
+            formData.append('content', eventTitle);
+            formData.append('EventTime', eventTime);
+            formData.append('Location', eventLocation);
+            if (eventHostOrg) formData.append('HostOrg', eventHostOrg);
+            if (eventMaxCapacity) formData.append('MaxCapacity', eventMaxCapacity);
+        } else {
+            if (!content && !mediaInput.files[0]) {
+                errorDiv.textContent = 'Please enter some content or attach a file';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            formData.append('сontent', content);
+            if (mediaInput.files[0]) {
+                formData.append('Media', mediaInput.files[0]);
+            }
+        }
+
+        try {
+            const response = await fetch('/api/Blog/PostsApi', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                errorDiv.textContent = errorData.error || 'Failed to create post';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const data = await response.json();
+
+            closePostModal();
+
+            if (window.onPostCreated) {
+                window.onPostCreated(data);
+            }
+        } catch (error) {
+            console.error('Error creating post:', error);
+            errorDiv.textContent = 'An unexpected error occurred';
+            errorDiv.classList.remove('hidden');
+        }
+    });
+</script>

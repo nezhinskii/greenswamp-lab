@@ -1,5 +1,7 @@
-﻿using greenswamp.Areas.Blog.Database;
-using greenswamp.Areas.Blog.ViewModels;
+﻿using greenswamp.Areas.Blog.ViewModels;
+using greenswamp.Database;
+using greenswamp.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,14 +11,28 @@ namespace greenswamp.Areas.Blog.Controllers
     public class ProfileController : Controller
     {
         private readonly GreenswampContext _context;
+        private readonly UserManager<Auth> _userManager;
 
-        public ProfileController(GreenswampContext context)
+        public ProfileController(GreenswampContext context, UserManager<Auth> userManager)
         {
             _context = context;
+            _userManager = userManager;
+        }
+
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            var auth = await _userManager.GetUserAsync(User);
+            if (auth == null)
+                return null;
+
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == auth.Id);
         }
 
         public async Task<IActionResult> Index(string username)
         {
+            var currentUser = await GetCurrentUserAsync();
+
             if (string.IsNullOrEmpty(username))
             {
                 return NotFound();
@@ -53,6 +69,7 @@ namespace greenswamp.Areas.Blog.Controllers
 
             var viewModel = new ProfileViewModel
             {
+                CurrentUser = currentUser,
                 User = user,
                 Posts = posts,
                 TrendingPonds = trendingPonds,

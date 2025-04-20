@@ -69,7 +69,9 @@
                     @post.Content
                     @foreach (var tag in post.Tags)
                     {
-                        <span class="text-swamp-700 hover:text-swamp-500">#@tag.TagName</span>
+                        <a href="/Blog/Ponds/@tag.TagName" class="text-swamp-500 hover:text-swamp-600">
+                            <span class="text-swamp-700 hover:text-swamp-500">#@tag.TagName</span>
+                        </a>
                     }
                 </p>
                 @if (!string.IsNullOrEmpty(post.MediaUrl))
@@ -114,7 +116,7 @@
             @foreach (var interaction in post.Interactions.Where(i => i.InteractionType == greenswamp.Areas.Blog.Models.InteractionType.Comment))
             {
                 <div class="flex items-start space-x-3 mb-4">
-                    <a href="@Url.Action("Index", "Post", new { postId = post.PostId })">
+                    <a href="@Url.Action("Index", "Profile", new { username = interaction.User.Username })">
                     @if (!string.IsNullOrEmpty(interaction.User.AvatarUrl))
                     {
                         <img src="@interaction.User.AvatarUrl" alt="User avatar" class="w-12 h-12 rounded-full" />

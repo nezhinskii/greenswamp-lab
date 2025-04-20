@@ -1,5 +1,8 @@
-﻿using greenswamp.Areas.Blog.Database;
+﻿using greenswamp.Areas.Blog.Models;
 using greenswamp.Areas.Blog.ViewModels;
+using greenswamp.Database;
+using greenswamp.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,19 +12,57 @@ namespace greenswamp.Areas.Blog.Controllers
     public class FeedController : Controller
     {
         private readonly GreenswampContext _context;
+        private readonly UserManager<Auth> _userManager;
 
-        public FeedController(GreenswampContext context)
+        public FeedController(GreenswampContext context, UserManager<Auth> userManager)
         {
             _context = context;
+            _userManager = userManager;
+        }
+
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            var auth = await _userManager.GetUserAsync(User);
+            if (auth == null)
+                return null;
+
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == auth.Id);
         }
 
         public async Task<IActionResult> Index()
         {
-            var posts = await _context.Posts
+            return await BuildPosts();
+        }
+
+        [Route("Blog/Ponds/{tag}")]
+        public async Task<IActionResult> Ponds(string tag)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                return NotFound();
+            }
+            if (!await _context.Tags.AnyAsync(t => t.TagName == tag))
+            {
+                return NotFound();
+            }
+            return await BuildPosts(tag);
+        }
+
+        public async Task<IActionResult> BuildPosts(string? tag = null)
+        {
+            IQueryable<Post> postsQuery = _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Event)
                 .Include(p => p.Tags)
-                .Include(p => p.Interactions)
+                .Include(p => p.Interactions);
+
+            if (!string.IsNullOrEmpty(tag))
+            {
+                postsQuery = postsQuery.Where(p => p.Tags.Any(t => t.TagName == tag));
+            }
+
+            var posts = await postsQuery
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(10)
                 .ToListAsync();
@@ -37,24 +78,35 @@ namespace greenswamp.Areas.Blog.Controllers
                 .Take(5)
                 .ToListAsync();
 
+            var currentUser = await GetCurrentUserAsync();
+
             var viewModel = new FeedViewModel
             {
+                CurrentUser = currentUser,
                 Posts = posts,
                 TrendingPonds = trendingPonds,
-                UpcomingEvents = upcomingEvents
+                UpcomingEvents = upcomingEvents,
+                Tag = tag
             };
 
-            return View(viewModel);
+            return View("Index", viewModel);
         }
 
         [HttpGet]
-        public async Task<IActionResult> LoadMorePosts(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> LoadMorePosts(int page = 1, int pageSize = 10, string? tag = null)
         {
-            var posts = await _context.Posts
+            IQueryable<Post> postsQuery = _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Event)
                 .Include(p => p.Tags)
-                .Include(p => p.Interactions)
+                .Include(p => p.Interactions);
+
+            if (!string.IsNullOrEmpty(tag))
+            {
+                postsQuery = postsQuery.Where(p => p.Tags.Any(t => t.TagName == tag));
+            }
+
+            var posts = await postsQuery
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

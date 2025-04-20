@@ -1,6 +1,8 @@
-using greenswamp.Areas.Blog.Database;
+using greenswamp.Database;
 using greenswamp.Models;
 using greenswamp.Services;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -16,7 +18,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedUICultures = new[] { cultureInfo };
 });
 
-string logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "requests.log");
+string logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "requests.loAddDbContextg");
 builder.Services.AddSingleton<RequestLogging>(new RequestLogging(next => Task.CompletedTask, logFilePath));
 
 
@@ -27,6 +29,37 @@ builder.Services.AddSingleton<IEmailService, EmailService>();
 builder.Services.AddSingleton<IContactFormService, ContactFormService>();
 builder.Services.AddDbContext<GreenswampContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddIdentity<Auth, IdentityRole<long>>()
+    .AddEntityFrameworkStores<GreenswampContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+    options.User.RequireUniqueEmail = true;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.SlidingExpiration = true;
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600;
+});
 
 var app = builder.Build();
 

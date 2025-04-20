@@ -1,6 +1,8 @@
-﻿using greenswamp.Areas.Blog.Database;
-using greenswamp.Areas.Blog.Models;
+﻿using greenswamp.Areas.Blog.Models;
 using greenswamp.Areas.Blog.ViewModels;
+using greenswamp.Database;
+using greenswamp.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +12,28 @@ namespace greenswamp.Areas.Blog.Controllers
     public class PostController : Controller
     {
         private readonly GreenswampContext _context;
+        private readonly UserManager<Auth> _userManager;
 
-        public PostController(GreenswampContext context)
+        public PostController(GreenswampContext context, UserManager<Auth> userManager)
         {
             _context = context;
+            _userManager = userManager;
+        }
+
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            var auth = await _userManager.GetUserAsync(User);
+            if (auth == null)
+                return null;
+
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == auth.Id);
         }
 
         public async Task<IActionResult> Index(int postId)
         {
+            var currentUser = await GetCurrentUserAsync();
+
             var post = await _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Event)
@@ -44,6 +60,7 @@ namespace greenswamp.Areas.Blog.Controllers
 
             var viewModel = new FeedViewModel
             {
+                CurrentUser = currentUser,
                 Posts = new List<Post> { post },
                 TrendingPonds = trendingPonds,
                 UpcomingEvents = upcomingEvents

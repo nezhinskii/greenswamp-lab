@@ -1,4 +1,6 @@
-﻿namespace greenswamp.Areas.Blog.Models
+﻿using greenswamp.Models;
+
+namespace greenswamp.Areas.Blog.Models
 {
     public enum InteractionType
     {

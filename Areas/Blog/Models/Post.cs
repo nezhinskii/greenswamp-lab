@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using greenswamp.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 
 namespace greenswamp.Areas.Blog.Models

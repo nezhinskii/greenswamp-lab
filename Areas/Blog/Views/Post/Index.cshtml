@@ -39,8 +39,8 @@
             </div>
 
             <!-- Main Feed -->
-            <div class="lg:col-span-2 divide-y bg-white">
-                @await Html.PartialAsync("_PostList", Model.Posts, new ViewDataDictionary(ViewData) { { "IsFullView", true } })
+            <div id = "postContainer" class="lg:col-span-2 divide-y bg-white">
+                @await Html.PartialAsync("_PostList", Model.Posts, new ViewDataDictionary(ViewData) { { "IsFullView", true }, { "CurrentUser", Model.CurrentUser } })
             </div>
 
             <!-- Right Sidebar -->
@@ -80,6 +80,44 @@
         function closePostModal() {
             document.getElementById('postModal').classList.add('hidden');
             document.getElementById('postContent').value = '';
+        }
+
+        async function submitComment(event, postId) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('postId', postId);
+
+            try {
+                const response = await fetch('/api/Blog/PostsApi/comment', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(errorData.error || 'Failed to post comment');
+                    return;
+                }
+
+                form.reset();
+
+                const htmlResponse = await fetch(`/Blog/Posts/GetFullPostHtml/${postId}`);
+                if (!htmlResponse.ok) {
+                    alert('Failed to refresh post');
+                    return;
+                }
+
+                const html = await htmlResponse.text();
+                const postContainer = document.getElementById('postContainer');
+                postContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Error submitting comment:', error);
+                alert('An error occurred while posting the comment');
+            }
         }
     </script>
 </body>

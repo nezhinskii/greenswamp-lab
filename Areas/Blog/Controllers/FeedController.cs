@@ -49,10 +49,21 @@ namespace greenswamp.Areas.Blog.Controllers
             return await BuildPosts(tag);
         }
 
-        public async Task<IActionResult> BuildPosts(string? tag = null)
+        [Route("Blog/Reribbs/{parentPostId}")]
+        public async Task<IActionResult> Reribbs(long parentPostId)
+        {
+            if (!await _context.Posts.AnyAsync(p => p.PostId == parentPostId))
+            {
+                return NotFound();
+            }
+            return await BuildPosts(parentPostId: parentPostId);
+        }
+
+        public async Task<IActionResult> BuildPosts(string? tag = null, long? parentPostId = null)
         {
             IQueryable<Post> postsQuery = _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.ParentPost)
                 .Include(p => p.Event)
                 .Include(p => p.Tags)
                 .Include(p => p.Interactions);
@@ -60,6 +71,11 @@ namespace greenswamp.Areas.Blog.Controllers
             if (!string.IsNullOrEmpty(tag))
             {
                 postsQuery = postsQuery.Where(p => p.Tags.Any(t => t.TagName == tag));
+            }
+
+            if (parentPostId.HasValue)
+            {
+                postsQuery = postsQuery.Where(p => p.ParentPostId == parentPostId.Value);
             }
 
             var posts = await postsQuery
@@ -93,10 +109,11 @@ namespace greenswamp.Areas.Blog.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> LoadMorePosts(int page = 1, int pageSize = 10, string? tag = null)
+        public async Task<IActionResult> LoadMorePosts(int page = 1, int pageSize = 10, string? tag = null, long? parentPostId = null)
         {
             IQueryable<Post> postsQuery = _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.ParentPost)
                 .Include(p => p.Event)
                 .Include(p => p.Tags)
                 .Include(p => p.Interactions);
@@ -104,6 +121,11 @@ namespace greenswamp.Areas.Blog.Controllers
             if (!string.IsNullOrEmpty(tag))
             {
                 postsQuery = postsQuery.Where(p => p.Tags.Any(t => t.TagName == tag));
+            }
+
+            if (parentPostId.HasValue)
+            {
+                postsQuery = postsQuery.Where(p => p.ParentPostId == parentPostId.Value);
             }
 
             var posts = await postsQuery

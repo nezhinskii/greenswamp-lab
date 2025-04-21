@@ -78,6 +78,25 @@ namespace greenswamp.Areas.Blog.Controllers
                     return BadRequest(new { error = "Content cannot be empty" });
                 }
 
+                Post? parentPost = null;
+                if (request.ParentPostId.HasValue)
+                {
+                    parentPost = await _context.Posts.FindAsync(request.ParentPostId.Value);
+                    if (parentPost == null)
+                    {
+                        return NotFound(new { error = "Parent post not found" });
+                    }
+
+                    var reribbInteraction = new Interaction
+                    {
+                        UserId = user.Id,
+                        PostId = request.ParentPostId.Value,
+                        InteractionType = InteractionType.Reribb,
+                        CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                    };
+                    _context.Interactions.Add(reribbInteraction);
+                }
+
                 var tagRegex = new Regex(@"\B#[\w\d_-]+");
                 var tags = tagRegex.Matches(request.Content)
                     .Select(m => m.Value.Substring(1))
@@ -91,7 +110,8 @@ namespace greenswamp.Areas.Blog.Controllers
                     UserId = user.Id,
                     Content = cleanContent,
                     PostType = PostType.Text,
-                    CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                    CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified),
+                    ParentPostId = request.ParentPostId
                 };
 
                 if (tags.Any())
@@ -169,6 +189,41 @@ namespace greenswamp.Areas.Blog.Controllers
 
                 return Ok(response);
             }
+        }
+
+        [HttpPost("comment")]
+        public async Task<IActionResult> CreateComment([FromForm] long postId, [FromForm] string content)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized(new { error = "User not found" });
+            }
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return BadRequest(new { error = "Comment content cannot be empty" });
+            }
+
+            var post = await _context.Posts.FindAsync(postId);
+            if (post == null)
+            {
+                return NotFound(new { error = "Post not found" });
+            }
+
+            var interaction = new Interaction
+            {
+                UserId = user.Id,
+                PostId = postId,
+                InteractionType = InteractionType.Comment,
+                Content = content.Trim(),
+                CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+            };
+
+            _context.Interactions.Add(interaction);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { interaction.InteractionId });
         }
     }
 }

@@ -36,6 +36,7 @@ namespace greenswamp.Areas.Blog.Controllers
 
             var post = await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.ParentPost)
                 .Include(p => p.Event)
                 .Include(p => p.Tags)
                 .Include(p => p.Interactions)

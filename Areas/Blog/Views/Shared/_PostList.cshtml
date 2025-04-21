@@ -2,6 +2,7 @@
 
 @{
     var isFullView = ViewData["IsFullView"] as bool? ?? false;
+    var currentUser = ViewData["CurrentUser"] as greenswamp.Models.User;
 }
 
 @foreach (var post in Model)
@@ -65,6 +66,50 @@
                     <span class="text-swamp-500">·</span>
                     <a href="@Url.Action("Index", "Post", new { postId = post.PostId })" class="text-sm text-swamp-500 hover:text-swamp-700">@post.CreatedAt.ToString("MMM dd, yyyy")</a>
                 </div>
+
+                    @if (post.ParentPost != null)
+                    {
+                        <div class="mt-2 p-4 bg-swamp-50 rounded-lg border border-swamp-200">
+                            <div class="flex items-start space-x-2">
+                            <a href="@Url.Action("Index", "Profile", new { username = post.ParentPost.User.Username })">
+                            @if (!string.IsNullOrEmpty(post.ParentPost.User.AvatarUrl))
+                            {
+                                <img src="@post.ParentPost.User.AvatarUrl" alt="User avatar" class="w-10 h-10 rounded-full" />
+                            }
+                            else
+                            {
+                                <img src="https://i.pravatar.cc/150?img=6" alt="Default avatar" class="w-10 h-10 rounded-full" />
+                            }
+                                </a>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <a href="@Url.Action("Index", "Profile", new { username = post.ParentPost.User.Username })">
+                                            <h5 class="font-semibold text-swamp-800 text-sm">@post.ParentPost.User.DisplayName</h5>
+                                        </a>
+                                        <a href="@Url.Action("Index", "Profile", new { username = post.ParentPost.User.Username })" class="text-xs text-swamp-400 hover:text-swamp-600">@@@post.ParentPost.User.Username</a>
+                                        <span class="text-swamp-400">·</span>
+                                        <a href="@Url.Action("Index", "Post", new { postId = post.ParentPost.PostId })" class="text-xs text-swamp-400 hover:text-swamp-600">@post.ParentPost.CreatedAt.ToString("MMM dd, yyyy")</a>
+                                    </div>
+                                    <p class="mt-1 text-swamp-600 text-sm">@post.ParentPost.Content</p>
+                                    @if (!string.IsNullOrEmpty(post.ParentPost.MediaUrl))
+                                    {
+                                        @if (post.ParentPost.MediaType == greenswamp.Areas.Blog.Models.MediaType.Image)
+                                        {
+                                            <img class="mt-2 rounded-lg" src="@post.ParentPost.MediaUrl" alt="@post.ParentPost.AltText" style="max-height: 150px;" />
+                                        }
+                                        else if (post.ParentPost.MediaType == greenswamp.Areas.Blog.Models.MediaType.Video)
+                                        {
+                                            <div class="mt-2 rounded-lg overflow-hidden">
+                                                <video class="w-full aspect-video object-cover bg-slate-900" controls preload="metadata" title="@post.ParentPost.AltText" style="max-height: 150px;">
+                                                    <source src="@post.ParentPost.MediaUrl" type="video/mp4">
+                                                </video>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
                 <p class="mt-2 text-swamp-700">
                     @post.Content
                     @foreach (var tag in post.Tags)
@@ -98,13 +143,30 @@
                         <span>@post.Interactions.Count(i => i.InteractionType == greenswamp.Areas.Blog.Models.InteractionType.Comment) Answers</span>
                     </button>
                     </a>
+                    <a href="/Blog/Reribbs/@post.PostId">
                     <button class="flex items-center space-x-2 hover:text-swamp-600">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
                         <span>@post.Interactions.Count(i => i.InteractionType == greenswamp.Areas.Blog.Models.InteractionType.Reribb) Reribbs</span>
                     </button>
+                    </a>
+                    <button onclick="openReribbModal(@post.PostId)" class="flex bg-swamp-500 text-white px-4 py-2 rounded-full text-sm hover:bg-swamp-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>New Reribb</span>
+                    </button>
                 </div>
+                @if (isFullView && currentUser != null)
+                {
+                    <div class="mt-4">
+                        <form id="comment-form-@post.PostId" class="flex items-center space-x-2" onsubmit="submitComment(event, @post.PostId)">
+                            <input type="text" name="content" placeholder="Write a comment..." class="w-full p-2 rounded-lg border border-swamp-300 focus:ring-swamp-400 focus:border-swamp-400">
+                            <button type="submit" class="bg-swamp-500 text-white px-4 py-2 rounded-lg hover:bg-swamp-600">Comment</button>
+                        </form>
+                    </div>
+                }
             </div>
         </div>
     </div>

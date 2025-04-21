@@ -9,5 +9,6 @@
         public string? Location { get; set; }
         public string? HostOrg { get; set; }
         public long? MaxCapacity { get; set; }
+        public long? ParentPostId { get; set; }
     }
 }

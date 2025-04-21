@@ -1,4 +1,8 @@
 ﻿@model greenswamp.Areas.Blog.ViewModels.FeedViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var csrfToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,6 +46,7 @@
             <div id = "postContainer" class="lg:col-span-2 divide-y bg-white">
                 @await Html.PartialAsync("_PostList", Model.Posts, new ViewDataDictionary(ViewData) { { "IsFullView", true }, { "CurrentUser", Model.CurrentUser } })
             </div>
+            <meta name="csrf-token" content="@csrfToken">
 
             <!-- Right Sidebar -->
             <div class="lg:col-span-1 bg-white invisible lg:visible">
@@ -93,7 +98,8 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 });
 

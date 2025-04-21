@@ -28,6 +28,7 @@ namespace greenswamp.Areas.Blog.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePost([FromForm] CreatePostRequest request)
         {
             request.Content ??= "";
@@ -192,6 +193,7 @@ namespace greenswamp.Areas.Blog.Controllers
         }
 
         [HttpPost("comment")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateComment([FromForm] long postId, [FromForm] string content)
         {
             var user = await _userManager.GetUserAsync(User);

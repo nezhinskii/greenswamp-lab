@@ -1,5 +1,10 @@
-﻿<!-- Post Modal (Hidden by default) -->
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var csrfToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+<!-- Post Modal (Hidden by default) -->
 <div id="postModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <meta name="csrf-token" content="@csrfToken">
     <div class="bg-white rounded-xl max-w-2xl w-full p-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-semibold" id="modalTitle">New Ribbit</h3>
@@ -203,11 +208,14 @@
                 formData.append('parentPostId', parentPostId);
             }
         }
-
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         try {
             const response = await fetch('/api/Blog/PostsApi', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
             });
 
             if (!response.ok) {
